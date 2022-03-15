@@ -2,11 +2,12 @@ package jwt
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/dgrijalva/jwt-go"
 )
