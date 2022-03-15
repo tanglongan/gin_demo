@@ -72,10 +72,10 @@ func AuthMiddleware() func(c *gin.Context) {
 		}
 		// 按照空格分开
 		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 2004,
-				"msg":  "请求头重auth格式有误",
+				"msg":  "请求头中auth格式有误",
 			})
 			c.Abort()
 			return
