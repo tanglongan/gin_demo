@@ -2,8 +2,8 @@ package jwt
 
 import (
 	"errors"
+	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -16,6 +16,10 @@ const TokenExpireDuration = time.Hour * 2
 
 var MySecret = []byte("疫情悄悄的过去吧")
 
+type UserInfo struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
+}
 type MyClaims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
@@ -27,15 +31,18 @@ func Routers(e *gin.Engine) {
 }
 
 func authHandler(c *gin.Context) {
-	var user url.Userinfo
+	var user UserInfo
 	err := c.ShouldBind(&user)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"code": 2001, "msg": "无效的参数"})
 		return
 	}
 
-	if password, _ := user.Password(); user.Username() == "tanglongan" && password == "123456" {
-		tokenString, _ := GenToken(user.Username())
+	if user.UserName == "tanglongan" && user.Password == "123456" {
+		tokenString, err := GenToken(user.UserName)
+		if err != nil {
+			log.Fatal(err)
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"code": 2000,
 			"msg":  "success",
@@ -75,7 +82,7 @@ func AuthMiddleware() func(c *gin.Context) {
 		}
 
 		// parts[1]是获取到的tokenString，我们使用之前定义好的解析JWT的函数解析它
-		token, err := ParsetToken(parts[1])
+		token, err := ParseToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 2005,
@@ -103,6 +110,7 @@ func homeHandler(c *gin.Context) {
 
 // GenToken 生成JWT
 func GenToken(username string) (string, error) {
+	// 创建一个我们自己的声明
 	c := MyClaims{
 		username,
 		jwt.StandardClaims{
@@ -110,12 +118,14 @@ func GenToken(username string) (string, error) {
 			Issuer:    "tanglongan",
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodPS256, c)
+	// 使用指定的签名方法创建签名对象
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
+	// 使用指定的Secret签名并获得完整的编码后的字符串token
 	return token.SignedString(MySecret)
 }
 
-// ParsetToken 解析JWT
-func ParsetToken(tokenString string) (*MyClaims, error) {
+// ParseToken 解析JWT
+func ParseToken(tokenString string) (*MyClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return MySecret, nil
 	})

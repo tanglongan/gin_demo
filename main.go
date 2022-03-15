@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gin_demo/cookies"
+	"gin_demo/jwt"
 	"gin_demo/middleWare/globalMiddleWare"
 	"gin_demo/routers/asyncRequest"
 	"gin_demo/routers/paramParse"
@@ -46,7 +47,8 @@ func main() {
 		redirect.Routers,
 		asyncRequest.Routers,
 		cookies.Routers,
-		paramValidate.Routers)
+		paramValidate.Routers,
+		jwt.Routers)
 
 	// 注册路由
 	r := Init()
